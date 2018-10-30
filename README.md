@@ -5,8 +5,31 @@ This is a test project, it contains an API to simulate a system of reviews gener
 
 Requirements:
 Python 3.5+
-Django 2.1.2
 
-setup:
-pip3 install -r requirements
 
+INSTALL:
+    pip install -r requirements
+
+    There's no need for data creation, it's already loaded into db.sqlite3.
+    If wants to clear everything, delete db.sqlite3 file and run:
+
+    python manage.py migrate
+
+    that will generate the DB file, 2 users:
+        [{ 'username': 'cesar', 'password': 'qwerty'}, {'username': 'r2d2': 'password': 'qwerty'}]
+    1 superuser:
+        {'username': 'admin', 'password': 'admin'}
+
+USE:
+    python manage.py runserver
+
+CONTENT:
+    list of current users and a form for its creation:
+    http://127.0.0.1:8000/api/v1/
+
+    to authenticate on the system, read:
+    http://127.0.0.1:8000/api/v1/docs/
+
+TEST
+    to test the app and get the code coverage report, run:
+    python manage.py migrate
