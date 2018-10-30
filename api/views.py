@@ -1,58 +1,62 @@
-from django.http import HttpResponse
-from django.http import HttpResponseForbidden
-from django.http import HttpResponseBadRequest
-from django.http import HttpResponseNotFound
-from django.forms.models import model_to_dict
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework import generics, viewsets, status
 
-import json
-
-from .utils import get_user_from_key, MESSAGES, generate_review_from_data
-from .models import Review
+from .models import Review, User
+from . import serializers
 
 
-def review(request):
-    if request.method == "POST":
-        data = json.loads(request.body.decode('utf-8'))
-        if 'authkey' not in data:
-            return HttpResponseForbidden(json.dumps({'message': MESSAGES['NO_KEY']}))
-        user = get_user_from_key(data['authkey'])
-        if user is None:
-            return HttpResponseForbidden(json.dumps({'message': MESSAGES['BAD_KEY']}))
-        if 'rating' not in data or 'title' not in data or 'summary' not in data or 'company' not in data:
-            return HttpResponseBadRequest(json.dumps({'message': MESSAGES['BAD_FIELDS']}))
+class ReviewViewSet(viewsets.ModelViewSet):
+    """
+    Allows to get full list of reviews created by request's user, create new reviews
+    or retrieve just one
+    """
+    permission_classes = (IsAuthenticated,)
 
-        new_review = generate_review_from_data(data, request, user)
+    queryset = Review.objects.all()
+    serializer_class = serializers.ReviewSerializer
 
-        return HttpResponse(json.dumps(model_to_dict(new_review)), content_type="application/json")
-    elif request.method == "GET":
-        auth_key = request.GET.get('authkey', None)
-        if auth_key is None:
-            return HttpResponseForbidden(json.dumps({'message': MESSAGES['NO_KEY']}))
-        user = get_user_from_key(auth_key)
-        if user is None:
-            return HttpResponseForbidden(json.dumps({'message': MESSAGES['BAD_KEY']}))
+    def create(self, request):
+        #Populate the missing data, that doesn't come from the request's data
+        request.data['ip_address'] = request.META.get('REMOTE_ADDR')
+        request.data['user'] = request.user.pk
+        serializer = self.serializer_class(data=request.data)
 
-        results = Review.objects.all().filter(user=user)
-        data = [ model_to_dict(result) for result in results]
+        if serializer.is_valid():
+            Review.objects.create(**serializer.validated_data)
 
-        return HttpResponse(json.dumps(data), content_type="application/json")
-    else:
-        return HttpResponseForbidden(json.dumps({'message': MESSAGES['BAD_METHOD']} ))
+            return Response(
+                {'status': True, 'message': 'Review created'},
+                status=status.HTTP_201_CREATED
+            )
+
+        return Response({
+            'status': False,
+            'message': serializer.errors#'Review was not created.'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    def list(self, request, *args, **kwargs):
+        all_reviews_for_user = self.queryset.filter(user=request.user)
+
+        serializer = self.get_serializer(all_reviews_for_user, many=True)
+        return Response(serializer.data)
+
+    def retrieve(self, request, review_id=None):
+        review = self.queryset.filter(user = request.user).filter(id = review_id).first()
+        if review:
+            serializer = self.get_serializer(review)
+            return Response(serializer.data)
+        return Response({
+            'status': False,
+            'message': 'not found or deleted'#'Review was not created.'
+        }, status=status.HTTP_404_NOT_FOUND)
 
 
-def one_review(request, review_id):
-    if request.method == "GET":
-        auth_key = request.GET.get('authkey', None)
-        if auth_key is None:
-            return HttpResponseForbidden(json.dumps({'message': MESSAGES['NO_KEY'] }))
-        user = get_user_from_key(auth_key)
-        if user is None:
-            return HttpResponseForbidden(json.dumps({'message': MESSAGES['BAD_KEY'] }))
+class UserListView(generics.ListCreateAPIView):
+    """
+    Allows to see the full list of users on the system and let create new ones
+    """
+    permission_classes = (AllowAny,)
 
-        result = Review.objects.all().filter(user=user).filter(id=review_id).first()
-        if result is None:
-            return HttpResponseNotFound(json.dumps({'message': MESSAGES['REVIEW_NOT_FOUND']}))
-        data = model_to_dict(result)
-        return HttpResponse(json.dumps(data), content_type="application/json")
-    else:
-        return HttpResponseForbidden(json.dumps({'message': MESSAGES['BAD_METHOD']}))
+    queryset = User.objects.all()
+    serializer_class = serializers.UserSerializer
