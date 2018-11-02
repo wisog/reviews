@@ -58,5 +58,6 @@ TEST:
     to test the app and get the code coverage report, run:    
     python manage.py test
     
-    ![alt text](https://raw.githubusercontent.com/wisog/reviews/master/coverage_report.png)
-    [[https://github.com/wisog/reviews/blob/master/coverage_report.png|alt=report]]
+    or to get an html report, use:
+    coverage html, it'll generate a table like the one on 
+    https://github.com/wisog/reviews/blob/master/coverage_report.png
