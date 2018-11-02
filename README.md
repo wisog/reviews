@@ -59,3 +59,4 @@ TEST:
     python manage.py test
     
     ![alt text](https://raw.githubusercontent.com/wisog/reviews/master/coverage_report.png)
+    [[https://github.com/wisog/reviews/blob/master/coverage_report.png|alt=report]]
