@@ -21,15 +21,41 @@ INSTALL:
         {'username': 'admin', 'password': 'admin'}
 
 USE:
+
     python manage.py runserver
 
 CONTENT:
+
     list of current users and a form for its creation:
     http://127.0.0.1:8000/api/v1/
+    
+    Authentication can be done using tokens with lifetime of 60 minutes, to obtain one check 
+    /api/v1/token/ documentation at:
+        http://127.0.0.1:8000/api/v1/docs/
+    after that **EVERY REQUEST SHOULD BE SIGNED** using the obtained access token in the Headers, use:
+    curl \
+         -H "Authorization: Bearer long_string_obtained_as_access_field_on_token_call" \
+        http://127.0.0.1:8000/api/v1/some-view/
+    
+    to get the list of reviews, send a GET request with Authorization header to:
+        http://127.0.0.1:8000/api/v1/reviews/
+    
+    to retrieve one review, send a GET request with Authorization header to:
+        http://127.0.0.1:8000/api/v1/reviews/{id}/
+    
+    to create a review, send a POST request with Authorization header to:
+        http://127.0.0.1:8000/api/v1/reviews/
+    the content_data should be a json with the format:
+        {
+            "rating": 1,
+            "title": "title",
+            "summary": "Summary for review",
+            "company": "Company, any data to store"
+        }
 
-    to authenticate on the system, read:
-    http://127.0.0.1:8000/api/v1/docs/
+TEST:
 
-TEST
-    to test the app and get the code coverage report, run:
-    python manage.py migrate
+    to test the app and get the code coverage report, run:    
+    python manage.py test
+    
+    ![alt text](https://github.com/wisog/reviews/blob/master/coverage_report.png)
