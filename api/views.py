@@ -16,25 +16,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
     queryset = Review.objects.all()
     serializer_class = serializers.ReviewSerializer
 
-    def create(self, request):
-        #Populate the missing data, that doesn't come from the request's data
-        request.data['ip_address'] = request.META.get('REMOTE_ADDR')
-        request.data['user'] = request.user.pk
-        serializer = self.serializer_class(data=request.data)
-
-        if serializer.is_valid():
-            Review.objects.create(**serializer.validated_data)
-
-            return Response(
-                {'status': True, 'message': 'Review created'},
-                status=status.HTTP_201_CREATED
-            )
-
-        return Response({
-            'status': False,
-            'message': serializer.errors#'Review was not created.'
-        }, status=status.HTTP_400_BAD_REQUEST)
-
     def list(self, request, *args, **kwargs):
         all_reviews_for_user = self.queryset.filter(user=request.user)
 
