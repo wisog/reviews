@@ -16,15 +16,16 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     def to_internal_value(self, data):
         request = self.context['request']
-        data['ip_address'] = request.META.get('REMOTE_ADDR')
-        data['user'] = self.context['request'].user
-        return data
+        new_data = data.copy()
+        new_data['ip_address'] = request.META.get('REMOTE_ADDR')
+        new_data['user'] = self.context['request'].user
+        return new_data
 
     def validate(self, data):
         """
         custom check based on logic for this model
         """
-        if data['rating'] < 1 or data['rating'] > 5:
+        if int(data['rating']) < 1 or int(data['rating']) > 5:
             raise serializers.ValidationError("rating should be between 1 and 5")
 
         return data

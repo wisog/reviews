@@ -1,0 +1,14 @@
+[run]
+omit =
+    # omit files already tested, like models for migrations and configs for admin views
+    api/admin.py
+    api/apps.py
+    api/models.py
+    api/utils.py
+[report]
+omit =
+    # omit files already tested, like models for migrations and configs for admin views
+    api/admin.py
+    api/apps.py
+    api/models.py
+    api/utils.py
